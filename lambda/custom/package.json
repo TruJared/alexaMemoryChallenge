@@ -4,14 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "cd ../../tests/ && node testflow.js",
+    "clean": "rm -rf ./node_modules && npm install",
+    "test": "cd ../../tests/ && node testflow.js && cd -",
     "watch": "nodemon -w index.js -x \"npm run test\""
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
     "ask-sdk-core": "^2.0.0",
-    "ask-sdk-model": "^1.0.0",
+    "ask-sdk-model": "^1.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^5.4.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-plugin-import": "^2.14.0",
     "nodemon": "^1.18.3"
   }
 }

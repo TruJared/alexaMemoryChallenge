@@ -10,7 +10,7 @@
 const fs = require('fs');
 
 const SourceCodeFile = '../lambda/custom/index.js';
-const handlerName = 'handler'; // 'lambda_handler'
+const handlerName = 'handler'; //'lambda_handler'
 
 let MyDialog = './dialogs/default.txt';
 
@@ -20,13 +20,14 @@ if (process.argv[2]) {
 
 // Toggle on or off various debugging outputs
 const options = {
-  delay: 1.0, // seconds between requests
+  delay: 2.0, // seconds between requests
   stdout: true, // standard output, show any errors or console.log() messages
   attributes: true, // true, false, or a string with the name of an attribute such as 'history' or 'favoriteColor'
   speechOutput: true,
   reprompt: true,
   slots: true,
   cards: true,
+  display: true,
   userId: '123', // final 3 chars of test user Id, can be overridden
   timestamp: '' // defaults to now, can set via '2018-04-03T21:47:49Z'
   // , requestEvent : false,    // show the request JSON sent to your code
@@ -382,6 +383,15 @@ function processArray(arr, cb) {
 }
 
 function prepareTestRequest(sa, newSession, request) {
+  let supportedInterfaces = { AudioPlayer: {} };
+
+  if (options.display) {
+    supportedInterfaces.Display = {
+      templateVersion: '1.0',
+      markupVersion: '1.0'
+    };
+  }
+
   const eventJSON = {
     context: {
       AudioPlayer: {
@@ -402,13 +412,7 @@ function prepareTestRequest(sa, newSession, request) {
         device: {
           deviceId:
             'amzn1.ask.device.AFUWNBZ2FSMDESJDWWA7GSZQBYX4DBS52RV7CHECNUTBCVMT6WW5SVO56SLUZ6D6TIJM5J2S6XNXKHAUU2RCXXQKUI75C37IOPVAA6HCVK5E5NV5EBVC5YUFAMIGD4FYZ4XFA4OEPDNCJYCHXN2RRGDQOZYQ',
-          supportedInterfaces: {
-            AudioPlayer: {},
-            Display: {
-              templateVersion: '1.0',
-              markupVersion: '1.0'
-            }
-          }
+          supportedInterfaces: supportedInterfaces
         },
         apiEndpoint: 'https://api.amazonalexa.com',
         apiAccessToken:
@@ -604,12 +608,15 @@ function addTime(startDateTime, delta) {
 function buildSlotObj(slotname, val) {
   let obj = '';
   let slashPos = val.indexOf('/');
+
   let ERstatus = '';
 
   if (!val || val === '') {
     // empty slot value
     obj = '"' + slotname + '": {"name":"' + slotname + '"}';
   } else {
+    let synonymList = '';
+
     if (slashPos <= 0) {
       // console.log('***** simple slot');
       ERstatus = 'SimpleSlot';
@@ -624,13 +631,32 @@ function buildSlotObj(slotname, val) {
         ERstatus = 'ER_SUCCESS_NO_MATCH';
       } else {
         ERstatus = 'ER_SUCCESS_MATCH';
+        let resolutionsSlashPos = resolvedVal.indexOf('/');
+        if (resolutionsSlashPos <= 0) {
+          synonymList = '{"value":{"name":"' + resolvedVal + '"}}';
+        } else {
+          let resolvedVals = resolvedVal.split('/');
+
+          for (let i = 0; i < resolvedVals.length; i++) {
+            synonymList += '{"value":{"name":"' + resolvedVals[i] + '"}},';
+          }
+
+          synonymList = synonymList.substring(0, synonymList.length - 1);
+        }
       }
+
       let mockAuthority =
         'amzn1.er-authority.echo-sdk.amzn1.ask.skill.9eb191fc-6c02-4444-a38a-6e2da4f0000.MySlotType';
 
       let ERvalues = '';
       if (ERstatus == 'ER_SUCCESS_MATCH') {
-        ERvalues = ', "values":[{"value":{"name":"' + resolvedVal + '"}}]';
+        ERvalues = ', "values":[';
+
+        ERvalues += synonymList;
+
+        // ERvalues += '{"value":{"name":"' + resolvedVal + '"}}' ;
+
+        ERvalues += ']';
       }
 
       let resolutions =
