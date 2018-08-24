@@ -1,0 +1,8 @@
+LaunchRequest
+StartStoryIntent
+? AnswerIntent answer=skating
+# ErrorHandler
+# AMAZON.StopIntent
+# AMAZON.CancelIntent
+# AMAZON.StartOverIntent
+# Amazon.YesIntent
