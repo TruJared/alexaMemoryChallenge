@@ -1,22 +1,18 @@
 const Alexa = require('ask-sdk-core');
+const stories = require('./stories');
 
-const WELCOME_MESSAGE = 'Welcome to memory challenge. I will read you a short passage, and then ask you question based on that. Are you ready?';
-const HELP_MESSAGE = 'I will read you a short passage,and then ask you question based on that. Are you ready?';
-const backgroundImageUrl = 'http://ajotwani.s3.amazonaws.com/alexa/background.png';
-
-// * helper functions //
+// * helpers //
 // todo figure out how to make modular //
 // returns true if the skill is running on a device with a display (show|spot)
-function supportsDisplay(handlerInput) {
+const supportsDisplay = (handlerInput) => {
   const hasDisplay = handlerInput.requestEnvelope.context
     && handlerInput.requestEnvelope.context.System
     && handlerInput.requestEnvelope.context.System.device
     && handlerInput.requestEnvelope.context.System.device.supportedInterfaces
     && handlerInput.requestEnvelope.context.System.device.supportedInterfaces.Display;
   return hasDisplay;
-}
-
-function getDisplay(response, attributes, imageUrl, displayType) {
+};
+const getDisplay = (response, attributes, imageUrl, displayType) => {
   const image = new Alexa.ImageHelper().addImageInstance(imageUrl).getImage();
   const currentScore = attributes.correctCount;
   let displayScore = '';
@@ -55,9 +51,9 @@ function getDisplay(response, attributes, imageUrl, displayType) {
   }
 
   return response;
-}
+};
 
-function getNextStory(handlerInput) {
+const getNextStory = (handlerInput) => {
   const shuffle = (arr) => {
     let ctr = arr.length;
     let temp;
@@ -89,9 +85,9 @@ function getNextStory(handlerInput) {
   attributes.lastQuestion = story;
   handlerInput.attributesManager.setSessionAttributes(attributes);
   return story;
-}
+};
 
-function checkAnswer(handlerInput, answerSlot) {
+const checkAnswer = (handlerInput, answerSlot) => {
   const attributes = handlerInput.attributesManager.getSessionAttributes();
   let status = '';
   let message = '';
@@ -110,10 +106,15 @@ function checkAnswer(handlerInput, answerSlot) {
   attributes.counter += 1;
   handlerInput.attributesManager.setSessionAttributes(attributes);
   return { status, message };
-}
+};
 
 // * request handlers //
 // todo figure out how to make modular //
+
+const WELCOME_MESSAGE = 'Welcome to memory challenge. I will read you a short passage, and then ask you question based on that. Are you ready?';
+const HELP_MESSAGE = 'I will read you a short passage,and then ask you question based on that. Are you ready?';
+const backgroundImageUrl = 'http://ajotwani.s3.amazonaws.com/alexa/background.png';
+
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     const { request } = handlerInput.requestEnvelope;
@@ -261,46 +262,6 @@ const ErrorHandler = {
 
 const skillBuilder = Alexa.SkillBuilders.custom();
 exports.handler = skillBuilder
-  .addRequestHandlers(
-    LaunchRequestHandler,
-    StoryHandler,
-    AnswerHandler,
-    FinalScoreHandler,
-    ErrorHandler,
-  )
+  .addRequestHandlers(LaunchRequestHandler, StoryHandler, AnswerHandler, FinalScoreHandler)
+  .addErrorHandlers(ErrorHandler)
   .lambda();
-
-// * stories //
-// todo move to api //
-const stories = [
-  {
-    question:
-      "Jeff loves sports. His favorite sports in the Olympics are ice skating and skiing for the Winter Olympics, and basketball and volleyball for the Summer Olympics. What are Jeff's favorite games for the Winter Olympics?",
-    answer: ['skating', 'ice skating', 'skiing'],
-    image: 'https://ajotwani.s3.amazonaws.com/alexa/winter2.png',
-  },
-  {
-    question:
-      "Mike loves sports. His favorite sports in the Olympics are ice skating and skiing for the Winter Olympics, and basketball and volleyball for the Summer Olympics. What are John's favorite games for the Winter Olympics?",
-    answer: ['skating', 'ice skating', 'skiing'],
-    image: 'https://ajotwani.s3.amazonaws.com/alexa/winter2.png',
-  },
-  {
-    question:
-      'While traveling, Samantha likes to take her tooth brush, hair brush, face cream, and hair dryer. What does Samantha like to carry when she travels?',
-    answer: ['tooth brush', 'hair brush', 'hair dryer', 'face cream'],
-    image: 'https://ajotwani.s3.amazonaws.com/alexa/travel2.png',
-  },
-  {
-    question:
-      "Mark loves sports. His favorite sports in the Olympics are ice skating and skiing for the Winter Olympics, and basketball and volleyball for the Summer Olympics. What are John's favorite games for the Winter Olympics?",
-    answer: ['skating', 'ice skating', 'skiing'],
-    image: 'https://ajotwani.s3.amazonaws.com/alexa/winter2.png',
-  },
-  {
-    question:
-      'While traveling, Jessica likes to take her tooth brush, hair brush, face cream, and hair dryer. What does Samantha like to carry when she travels?',
-    answer: ['tooth brush', 'hair brush', 'hair dryer', 'face cream'],
-    image: 'https://ajotwani.s3.amazonaws.com/alexa/travel2.png',
-  },
-];
